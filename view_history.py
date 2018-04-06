@@ -3,10 +3,47 @@
 
 from seaserv import seafile_api
 from seafobj.commits import commit_mgr
+from seafobj.commit_differ import CommitDiffer
 import argparse
 import sys
 
 traversed_commits = set()
+
+
+def print_history(commit):
+    out = {
+        'added_files': [],
+        'deleted_files': [],
+        'added_dirs': [],
+        'deleted_dirs': [],
+        'modified_files': [],
+        'renamed_files': [],
+        'moved_files': [],
+        'renamed_dirs': [],
+        'moved_dirs': []
+           }
+
+    if commit.parent_id:
+        parent = commit_mgr.load_commit(commit.repo_id, commit.version, commit.parent_id)  # noqa
+        differ = CommitDiffer(commit.repo_id, commit.version,
+                              parent.root_id, commit.root_id)
+        # tuple([out[x] for x in out.keys()]) = differ.diff()
+        differ_out = differ.diff()
+        out_keys = out.keys()
+        for idx, val in enumerate(differ_out, 0):
+            out[out_keys[idx]] = val
+
+        print "commit %s" % commit.commit_id
+        print "Author: %s" % commit.creator_name
+        if commit.second_parent_id:
+            print "Merge Commit"
+        print ""
+        for key in out.keys():
+            print "%s:" % key
+            for val in out[key]:
+                print val.path
+
+        print ""
 
 
 def print_commit_edge_list(commit):
@@ -19,7 +56,7 @@ def print_commit_edge_list(commit):
 def traverse_commits(commit_mgr, func, repo_id, repo_version, commit_id,
                      **kwargs):
     traversed_commits.add(commit_id)
-    commit = commit_mgr.load_commit(repo_id, repo_version, commit_id)  # noqa
+    commit = commit_mgr.load_commit(repo_id, repo_version, commit_id)
     func(commit)
     if commit.parent_id:
         if commit.parent_id not in traversed_commits:
@@ -53,6 +90,9 @@ def main():
         print "edge list:"
         traverse_commits(commit_mgr, print_commit_edge_list, repo.id,
                          repo.version, repo.head_cmmt_id)
+    else:
+        traverse_commits(commit_mgr, print_history, repo.id,
+                         repo.version, repo.head_cmmt_id, only_parent=True)
 
 
 if __name__ == '__main__':

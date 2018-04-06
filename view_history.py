@@ -27,11 +27,10 @@ def print_history(commit):
         parent = commit_mgr.load_commit(commit.repo_id, commit.version, commit.parent_id)  # noqa
         differ = CommitDiffer(commit.repo_id, commit.version,
                               parent.root_id, commit.root_id)
-        # tuple([out[x] for x in out.keys()]) = differ.diff()
-        differ_out = differ.diff()
-        out_keys = out.keys()
-        for idx, val in enumerate(differ_out, 0):
-            out[out_keys[idx]] = val
+        (out['added_files'], out['deleted_files'], out['added_dirs'],
+         out['deleted_dirs'], out['modified_files'], out['renamed_files'],
+         out['moved_files'], out['renamed_dirs'],
+         out['moved_dirs']) = differ.diff()
 
         print "commit %s" % commit.commit_id
         print "Author: %s" % commit.creator_name

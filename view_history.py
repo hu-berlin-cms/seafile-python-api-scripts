@@ -3,6 +3,7 @@
 
 from seaserv import seafile_api
 from seafobj.commits import commit_mgr
+from seafobj import fs_mgr
 from seafobj.commit_differ import CommitDiffer
 from collections import deque
 import datetime
@@ -10,6 +11,57 @@ import argparse
 import sys
 
 traversed_commits = set()
+
+
+def get_blocks(repo_id, version, root):
+    queued_dirs = [root]
+    blocks = set()
+    while queued_dirs:
+        cdir = fs_mgr.load_seafdir(repo_id, version, queued_dirs.pop())
+        for dent in cdir.get_files_list():
+            seafFile = fs_mgr.load_seafile(repo_id, version, dent.id)
+            blocks.update(seafFile.blocks)
+
+        for dent in cdir.get_subdirs_list():
+            queued_dirs.append(dent.id)
+
+    return blocks
+
+
+def block_diff(repo_id, version, root1, root2):
+    if root1 == root2:
+        return ([], [])
+
+    blocks1 = get_blocks(repo_id, version, root1)
+    blocks2 = get_blocks(repo_id, version, root2)
+    return (list(blocks2.difference(blocks1)),
+            list(blocks1.difference(blocks2)))
+
+
+def print_history_blocks(commit):
+    out = {
+        'added': [],
+        'deleted': [],
+           }
+
+    if commit.parent_id:
+        parent = commit_mgr.load_commit(commit.repo_id, commit.version, commit.parent_id)  # noqa
+        (out['added'], out['deleted']) = block_diff(
+            commit.repo_id, commit.version, parent.root_id, commit.root_id)
+
+        print "commit %s" % commit.commit_id
+        print "Author: %s" % commit.creator_name
+        print "Date: %s" % datetime.datetime.utcfromtimestamp(
+            commit.ctime).strftime('%Y-%m-%d %H:%M:%SZ')
+        if commit.second_parent_id:
+            print "Merge Commit"
+        print ""
+        for key in out.keys():
+            print "%s:" % key
+            for val in out[key]:
+                print val
+
+        print ""
 
 
 def print_history(commit):
@@ -87,6 +139,9 @@ def main():
     cmd_parser.add_argument('-t', '--tree', action="store_true",
                             dest="tree",
                             help="output history edge list for drawing tree")
+    cmd_parser.add_argument('-b', '--blocks', action="store_true",
+                            dest="blocks",
+                            help="Show block changes in history")
     cmd_parser.add_argument('-V', '--verbose', action="store_true",
                             dest="verbose",
                             help="Give detailed information, if possible")
@@ -100,6 +155,9 @@ def main():
         print "edge list:"
         traverse_commits(commit_mgr, print_commit_edge_list, repo.id,
                          repo.version, repo.head_cmmt_id)
+    elif args.blocks:
+        traverse_commits(commit_mgr, print_history_blocks, repo.id,
+                         repo.version, repo.head_cmmt_id, only_parent=True)
     else:
         traverse_commits(commit_mgr, print_history, repo.id,
                          repo.version, repo.head_cmmt_id, only_parent=True)

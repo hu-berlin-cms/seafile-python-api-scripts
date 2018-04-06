@@ -5,6 +5,7 @@ from seaserv import seafile_api
 from seafobj.commits import commit_mgr
 from seafobj.commit_differ import CommitDiffer
 from collections import deque
+import datetime
 import argparse
 import sys
 
@@ -35,6 +36,8 @@ def print_history(commit):
 
         print "commit %s" % commit.commit_id
         print "Author: %s" % commit.creator_name
+        print "Date: %s" % datetime.datetime.utcfromtimestamp(
+            commit.ctime).strftime('%Y-%m-%d %H:%M:%SZ')
         if commit.second_parent_id:
             print "Merge Commit"
         print ""

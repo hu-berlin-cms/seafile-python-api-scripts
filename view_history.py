@@ -4,6 +4,7 @@
 from seaserv import seafile_api
 from seafobj.commits import commit_mgr
 from seafobj.commit_differ import CommitDiffer
+from collections import deque
 import argparse
 import sys
 
@@ -53,19 +54,26 @@ def print_commit_edge_list(commit):
 
 
 def traverse_commits(commit_mgr, func, repo_id, repo_version, commit_id,
-                     **kwargs):
-    traversed_commits.add(commit_id)
-    commit = commit_mgr.load_commit(repo_id, repo_version, commit_id)
-    func(commit)
-    if commit.parent_id:
-        if commit.parent_id not in traversed_commits:
-            traverse_commits(commit_mgr, func, repo_id, repo_version,
-                             commit.parent_id, **kwargs)
-    if commit.second_parent_id and ('only_parent' not in kwargs or
-                                    not kwargs['only_parent']):
-        if commit.second_parent_id not in traversed_commits:
-            traverse_commits(commit_mgr, func, repo_id, repo_version,
-                             commit.second_parent_id, **kwargs)
+                     only_parent=False):
+    to_traverse = deque([commit_id])
+
+    # iterate over commits
+    while to_traverse:
+        commit_id = to_traverse.popleft()
+        # don't traverse commits twice
+        traversed_commits.add(commit_id)
+        commit = commit_mgr.load_commit(repo_id, repo_version, commit_id)
+
+        # do work
+        func(commit)
+
+        if commit.parent_id:
+            if commit.parent_id not in traversed_commits:
+                to_traverse.append(commit.parent_id)
+
+        if commit.second_parent_id and not only_parent:
+            if commit.second_parent_id not in traversed_commits:
+                to_traverse.append(commit.second_parent_id)
 
 
 def main():

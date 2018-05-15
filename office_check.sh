@@ -8,7 +8,7 @@ default_ccnet_conf_dir=${TOPDIR}/ccnet
 default_seafile_data_dir=${TOPDIR}/seafile-data
 default_conf_dir=${TOPDIR}/conf
 
-pyscript=${SCRIPTPATH}/${0%.sh}.py
+pyscript=${SCRIPTPATH}/$(basename ${0%.sh}.py)
 
 function check_python_executable() {
     if [[ "$PYTHON" != "" && -x $PYTHON ]]; then

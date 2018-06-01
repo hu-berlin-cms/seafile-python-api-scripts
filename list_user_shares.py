@@ -1,12 +1,15 @@
 #!/usr/bin/env python
-#coding: utf-8
+# coding: utf-8
 
 from seaserv import seafile_api, ccnet_api
 import sys
 
+
 def main():
     user = sys.argv[1]
     shared_repos = seafile_api.get_share_out_repo_list(user, -1, -1)
+    shared_repos += seafile_api.get_group_repos_by_owner(user)
+
     for repo in shared_repos:
         if repo.is_virtual:
             print "Folder %s of Repo %s, shared to:" % (repo.origin_path, repo.origin_repo_id)

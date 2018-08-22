@@ -62,5 +62,8 @@ export SEAFILE_CENTRAL_CONF_DIR=${default_conf_dir}
 
 export PYTHONPATH=${INSTALLPATH}/seafile/lib/python2.6/site-packages:${INSTALLPATH}/seafile/lib64/python2.6/site-packages:${INSTALLPATH}/seahub/thirdpart:$PYTHONPATH
 export PYTHONPATH=${INSTALLPATH}/seafile/lib/python2.7/site-packages:${INSTALLPATH}/seafile/lib64/python2.7/site-packages:$PYTHONPATH
+export PYTHONPATH=${INSTALLPATH}/seahub:$PYTHONPATH
+
+export DJANGO_SETTINGS_MODULE=seahub.settings
 
 $PYTHON ${pyscript} $@

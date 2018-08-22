@@ -45,7 +45,14 @@ def show_share_info(user):
     shared_repos = seafile_api.get_share_out_repo_list(user, -1, -1)
     shared_repos += seafile_api.get_group_repos_by_owner(user)
 
+    shown_repos = set()
+
     for repo in shared_repos:
+        if repo.repo_id in shown_repos:
+            continue
+
+        shown_repos.add(repo.repo_id)
+
         if repo.is_virtual:
             print("Folder %s of Repo %s, shared to:" % (repo.origin_path, repo.origin_repo_id))
         else:

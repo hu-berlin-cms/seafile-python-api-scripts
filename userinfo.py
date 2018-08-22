@@ -71,9 +71,13 @@ def show_login_details(user):
         print("v1 token created at: %s" % v1token.created)
     else:
         print("no v1 token")
-    print("devices: \n")
+    print("\ndevices:")
+
+    out_table = [['device name', 'last accessed', 'platform', 'client version', 'desktop client', 'last login ip', 'device id']]
     for dev in _get_devices(user):
-        print(dev)
+        out_table.append([dev['device_name'], dev['last_accessed'], "%s%s" % (dev['platform'], " (%s)" % dev['platform_version'] if dev['platform_version'] else ''), dev['client_version'], dev['is_desktop_client'], dev['last_login_ip'], dev['device_id']])
+
+    _print_table(out_table)
 
 
 def _get_v1token(user):
@@ -103,6 +107,18 @@ def _get_devices(user):
             device['is_desktop_client'] = True
 
     return devices
+
+# source: https://stackoverflow.com/a/19125514/1381638
+def _print_table(tbl, borderHorizontal = '-', borderVertical = '|', borderCross = '+'):
+    cols = [list(x) for x in zip(*tbl)]
+    lengths = [max(map(len, map(str, col))) for col in cols]
+    f = borderVertical + borderVertical.join(' {:>%d} ' % l for l in lengths) + borderVertical
+    s = borderCross + borderCross.join(borderHorizontal * (l+2) for l in lengths) + borderCross
+
+    print(s)
+    for row in tbl:
+        print(f.format(*row))
+        print(s)
 
 
 if __name__ == '__main__':

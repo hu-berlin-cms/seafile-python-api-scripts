@@ -66,6 +66,8 @@ def show_share_info(user):
         for suser in susers:
             print("%s, %s" % (suser.user, suser.perm))
 
+        print("\n")
+
 
 def show_login_details(user):
     # print(seafile_api.list_repo_tokens_by_email(user))
@@ -114,6 +116,7 @@ def _get_devices(user):
             device['is_desktop_client'] = True
 
     return devices
+
 
 # source: https://stackoverflow.com/a/19125514/1381638
 def _print_table(tbl, borderHorizontal = '-', borderVertical = '|', borderCross = '+'):

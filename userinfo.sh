@@ -10,13 +10,6 @@ default_conf_dir=${TOPDIR}/conf
 
 pyscript=${SCRIPTPATH}/$(basename ${0%.sh}.py)
 
-script_name=$0
-function usage () {
-    echo "usage : "
-    echo "$(basename ${script_name}) <user>"
-    echo ""
-}
-
 function check_python_executable() {
     if [[ "$PYTHON" != "" && -x $PYTHON ]]; then
         return 0
@@ -41,18 +34,6 @@ function check_python_executable() {
 }
 
 check_python_executable;
-
-if [ $# -gt 0 ];
-then
-    for param in $@;
-    do
-        if [ ${param} = "-h" -o ${param} = "--help" ];
-        then
-            usage;
-            exit 1;
-        fi
-    done
-fi
 
 
 # running script

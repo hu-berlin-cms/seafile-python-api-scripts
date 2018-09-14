@@ -60,11 +60,11 @@ def show_share_info(user):
         sgroups = seafile_api.list_repo_shared_group(user, repo.repo_id)
         print("groups:")
         for sgroup in sgroups:
-            print("%s (%d)" % (ccnet_api.get_group(sgroup.group_id).group_name, sgroup.group_id))
+            print("%s (%d), %s" % (ccnet_api.get_group(sgroup.group_id).group_name, sgroup.group_id, sgroup.perm))
         susers = seafile_api.list_repo_shared_to(user, repo.repo_id)
         print("users:")
         for suser in susers:
-            print("%s" % suser.user)
+            print("%s, %s" % (suser.user, suser.perm))
 
 
 def show_login_details(user):

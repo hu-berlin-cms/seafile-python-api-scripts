@@ -24,6 +24,10 @@ def main():
     cmd_parser.add_argument('-s', '--shares', action="store_true",
                             dest="shares", help="show shares of a user")
     cmd_parser.add_argument(
+        '-g', '--show_groupmembers', action="store_true",
+        dest="show_groupmembers",
+        help="show members of groups, to which repos are shared")
+    cmd_parser.add_argument(
         '-b', '--base-dn',
         default="ou=users,ou=Benutzerverwaltung,"
                 "ou=Computer- und Medienservice,"
@@ -35,17 +39,20 @@ def main():
     args = cmd_parser.parse_args()
 
     if args.shares:
-        show_share_info(args.user)
+        show_share_info(args.user, show_groupmembers=args.show_groupmembers)
 
     if args.login:
         show_login_details(args.user)
 
 
-def show_share_info(user):
+def show_share_info(user, show_groupmembers=False):
     shared_repos = seafile_api.get_share_out_repo_list(user, -1, -1)
     shared_repos += seafile_api.get_group_repos_by_owner(user)
 
     shown_repos = set()
+
+    if show_groupmembers:
+        groups = {}
 
     for repo in shared_repos:
         if repo.repo_id in shown_repos:
@@ -61,12 +68,23 @@ def show_share_info(user):
         print("groups:")
         for sgroup in sgroups:
             print("%s (%d), %s" % (ccnet_api.get_group(sgroup.group_id).group_name, sgroup.group_id, sgroup.perm))
+            if show_groupmembers:
+                groups[sgroup.group_id] = sgroup
         susers = seafile_api.list_repo_shared_to(user, repo.repo_id)
         print("users:")
         for suser in susers:
             print("%s, %s" % (suser.user, suser.perm))
 
         print("\n")
+
+    if show_groupmembers:
+        print("\ngroup memberships:")
+        for group in groups.values():
+            print("group %s (%d):" % (ccnet_api.get_group(group.group_id).group_name, group.group_id))
+            gusers = ccnet_api.get_group_members(group.group_id)
+            for guser in gusers:
+                print("%s" % (guser.user_name))
+            print("")
 
 
 def show_login_details(user):
